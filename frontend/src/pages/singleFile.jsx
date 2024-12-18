@@ -18,7 +18,7 @@ const SinglePageStepper = () => {
     testConfiguration: {
       sections: "",
       questions: "",
-      duration: "",
+      duration: { hours: '', minutes: '' },
       fullScreenMode: false,
       faceDetection: false,
       deviceRestriction: false,
@@ -189,45 +189,66 @@ const SinglePageStepper = () => {
             <hr className="mb-6" />
 
             <form onSubmit={handleChange} className="space-y-6 text-start">
-              {[
-                {label: "Assessment Name",name: "name",type: "text",placeholder: "Enter the name of the assessment"},
-                {label: "Description",name: "description",type: "textarea",placeholder: "Provide a brief overview of the assessment",description: "Provide a brief overview of the assessment, including its purpose and topics covered.",rows: 4},
-                {label: "Registration Start Date & Time",name: "registrationStart",type: "datetime-local"},
-                {label: "Registration End Date & Time",name: "registrationEnd",type: "datetime-local"},
-                {label: "Guidelines and Rules",name: "guidelines",type: "textarea",placeholder: "Outline the rules students must follow during the test",description: "Outline the rules students must follow during the test, including dress code, behavior expectations, and device policies.",rows: 6}
+  {[
+    {label: "Assessment Name *", name: "name", type: "text", placeholder: "Enter the name of the assessment"},
+    {label: "Description *", name: "description", type: "textarea", placeholder: "Provide a brief overview of the assessment", description: "Provide a brief overview of the assessment, including its purpose and topics covered.", rows: 4},
+    {label: "Registration Start Date & Time *", name: "registrationStart", type: "datetime-local"},
+    {label: "Registration End Date & Time *", name: "registrationEnd", type: "datetime-local"},
+    {label: "Guidelines and Rules *", name: "guidelines", type: "textarea", placeholder: "Outline the rules students must follow during the test", description: "Outline the rules students must follow during the test, including dress code, behavior expectations, and device policies.", rows: 6}
+  ].map((field) => (
+    <div key={field.name}>
+      <label className="block text-lg font-medium text-indigo-950 mb-2">
+        {field.label}
+        {field.description && (
+          <p className="text-sm font-normal text-slate-500 mb-2">
+            {field.description}
+          </p>
+        )}
+      </label>
+      {field.type === 'textarea' ? (
+        <textarea
+          name={field.name}
+          value={formData.assessmentOverview[field.name]}
+          onChange={(e) => handleChange(e, "assessmentOverview")}
+          rows={field.rows}
+          className="block w-full p-3 border border-gray-300 rounded-lg shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
+          placeholder={field.placeholder}
+        />
+      ) : field.type === 'datetime-local' ? (
+        <input
+          type={field.type}
+          name={field.name}
+          value={formData.assessmentOverview[field.name]}
+          min={new Date().toISOString().slice(0, 16)} // Prevent selection of past dates
+          onChange={(e) => {
+            const startTime = formData.assessmentOverview.registrationStart;
+            const endTime = formData.assessmentOverview.registrationEnd;
+            const selectedTime = e.target.value;
 
-              ].map((field) => (
-                <div key={field.name}>
-                  <label className="block text-lg font-medium text-indigo-950 mb-2">
-                    {field.label}
-                    {field.description && (
-                      <p className="text-sm font-normal text-slate-500 mb-2">
-                        {field.description}
-                      </p>
-                    )}
-                  </label>
-                  {field.type === 'textarea' ? (
-                    <textarea
-                      name={field.name}
-                      value={formData.assessmentOverview[field.name]}
-                      onChange={(e) => handleChange(e, "assessmentOverview")}
-                      rows={field.rows}
-                      className="block w-full p-3 border border-gray-300 rounded-lg shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
-                      placeholder={field.placeholder}
-                    />
-                  ) : (
-                    <input
-                      type={field.type}
-                      name={field.name}
-                      value={formData.assessmentOverview[field.name]}
-                      onChange={(e) => handleChange(e, "assessmentOverview")}
-                      className="block w-full p-3 border border-gray-300 rounded-lg shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
-                      placeholder={field.placeholder}
-                    />
-                  )}
-                </div>
-              ))}
-            </form>
+            if (field.name === 'registrationEnd' && startTime && selectedTime <= startTime) {
+              // Ensure end time is after start time
+              alert("The end time must be after the start time.");
+              return;
+            }
+
+            handleChange(e, "assessmentOverview");
+          }}
+          className="block w-full p-3 border border-gray-300 rounded-lg shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
+          placeholder={field.placeholder}
+        />
+      ) : (
+        <input
+          type={field.type}
+          name={field.name}
+          value={formData.assessmentOverview[field.name]}
+          onChange={(e) => handleChange(e, "assessmentOverview")}
+          className="block w-full p-3 border border-gray-300 rounded-lg shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
+          placeholder={field.placeholder}
+        />
+      )}
+    </div>
+  ))}
+</form>
           </div>
         )}
 
@@ -243,25 +264,80 @@ const SinglePageStepper = () => {
             </p>
             <hr />
             <form onSubmit={handleChange} className="space-y-8 text-start">
-              {[
-                {label: "Number of Sections",name: "sections",type: "number",placeholder: "Specify how many sections the test will have"},
-                {label: "Number of Questions",name: "questions",type: "number",placeholder: "Enter total number of questions"},
-                {label: "Duration of the Test",name: "duration",type: "time"}
-              ].map((field) => (
-                <div key={field.name}>
-                  <label className="block text-lg font-medium text-indigo-950 mb-1 text-start">
-                    {field.label}
-                  </label>
-                  <input
-                    type={field.type}
-                    name={field.name}
-                    value={formData.testConfiguration[field.name]}
-                    onChange={(e) => handleChange(e, "testConfiguration")}
-                    className="w-full p-3 border border-gray-300 rounded-lg shadow-sm focus:ring-yellow-500 focus:border-yellow-500"
-                    placeholder={field.placeholder}
-                  />
-                </div>
-              ))}
+            {[
+  { label: "Number of Sections *", name: "sections", type: "number", placeholder: "Specify how many sections the test will have" },
+  {label: "Number of Questions *", name: "questions", type: "number", placeholder: "Enter total number of questions"},
+  {label: "Duration of the Test *", name: "duration", type: "custom"}
+].map((field) => (
+  <div key={field.name}>
+    <label className="block text-lg font-medium text-indigo-950 mb-1 text-start">
+      {field.label}
+    </label>
+    {field.name === 'duration' ? (
+      <div>
+        <label className="block text-sm text-gray-600 mb-1">Duration</label>
+        <div className="flex items-center space-x-2">
+          <input
+            type="number"
+            name="hours"
+            min="1"
+            max="24"
+            placeholder="HH"
+            value={formData.testConfiguration.duration?.hours || ""}
+            onChange={(e) =>
+              handleChange(
+                { target: { 
+                  name: "duration ", 
+                  value: { 
+                    ...formData.testConfiguration.duration, 
+                    hours: e.target.value 
+                  } 
+                } },
+                "testConfiguration"
+              )
+            }
+            className="w-16 p-3 border border-gray-300 rounded-lg shadow-sm focus:ring-yellow-500 focus:border-yellow-500 text-center"
+            required
+          />
+          <span>:</span>
+          <input
+            type="number"
+            name="minutes"
+            min="1"
+            max="60"
+            placeholder="MM"
+            value={formData.testConfiguration.duration?.minutes || ""}
+            onChange={(e) =>
+              handleChange(
+                { target: { 
+                  name: "duration", 
+                  value: { 
+                    ...formData.testConfiguration.duration, 
+                    minutes: e.target.value 
+                  } 
+                } },
+                "testConfiguration"
+              )
+            }
+            className="w-16 p-3 border border-gray-300 rounded-lg shadow-sm focus:ring-yellow-500 focus:border-yellow-500 text-center"
+            required
+          />
+          <span className="text-gray-500 text-sm">HH:MM</span>
+        </div>
+      </div>
+    ) : (
+      <input
+        type={field.type}
+        name={field.name}
+        value={formData.testConfiguration[field.name]}
+        onChange={(e) => handleChange(e, "testConfiguration")}
+        className="w-full p-3 border border-gray-300 rounded-lg shadow-sm focus:ring-yellow-500 focus:border-yellow-500"
+        placeholder={field.placeholder}
+      />
+    )}
+  </div>
+))}
+
 
       {/* Proctoring Enablement */}
       <div className="mt-8">
@@ -369,7 +445,7 @@ const SinglePageStepper = () => {
         {/* Pass Percentage */}
         <div className="mb-6">
           <label className="block text-lg font-medium text-indigo-950 mb-1 text-start">
-            Pass Percentage
+            Pass Percentage *
           </label>
           <p className="text-sm text-gray-500 font-normal mb-2 text-start">
             (Enter the minimum percentage required to pass the test.)
